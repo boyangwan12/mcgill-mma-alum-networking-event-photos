@@ -1,0 +1,6 @@
+.DS_Store
+.omc/
+# event photos are not stored in git (deployed straight from this folder to Cloudflare Pages)
+photos/thumb/
+photos/preview/
+photos/original/
