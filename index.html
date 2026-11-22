@@ -517,7 +517,7 @@ function paint(i){
   gsap.set(lbImg,{filter:"blur(14px) brightness(.7) grayscale(.6)"});
   const hi=new Image(); hi.decoding="async"; hi.onload=()=>{ if(cur!==i) return; lbImg.src=p.preview; gsap.to(lbImg,{filter:"blur(0px) brightness(1) grayscale(0)",duration:.9,ease:"power2.out"}); }; hi.src=p.preview;
   $("#lbNo").textContent=`No. ${pad(i+1)} / ${pad(N)}`;
-  $("#lbCap").textContent=`${EVENT.tag} · ${EVENT.line1} ${EVENT.line2}`;
+  $("#lbCap").textContent=EVENT.tag;
 }
 function openLB(i,fromEl){
   lbOpen=true; lb.classList.add("open"); lockScroll(true); paint(i);
