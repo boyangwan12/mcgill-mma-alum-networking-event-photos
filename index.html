@@ -174,6 +174,24 @@ body::after{content:"";position:fixed;inset:-50%;z-index:90;pointer-events:none;
 #lbImg{touch-action:none;-webkit-user-select:none;user-select:none}
 @media (hover:hover) and (pointer:fine){#lbImg{cursor:none}}
 
+/* ---------- 360 video ---------- */
+.v360{padding:clamp(70px,13vh,140px) clamp(16px,3vw,40px) clamp(50px,9vh,100px);border-top:1px solid var(--line)}
+.v360 .amb-head{padding:0;margin-bottom:clamp(20px,4vh,40px)}
+.v360-sub{color:var(--dim);margin-top:14px;font-size:14px}
+.v360-frame{position:relative;aspect-ratio:2/1;border-radius:22px;overflow:hidden;background:#000;border:1px solid var(--line);box-shadow:0 30px 90px rgba(0,0,0,.55)}
+.v360-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.v360-play{position:absolute;inset:0;width:100%;height:100%;padding:0;display:block;cursor:pointer}
+.v360-play img{width:100%;height:100%;object-fit:cover;transition:transform 1.2s cubic-bezier(.2,.7,.2,1),filter .5s;filter:brightness(.72)}
+.v360-play::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(12,11,9,0) 30%,rgba(12,11,9,.55) 100%)}
+.v360-badge{position:absolute;left:18px;top:18px;z-index:2;padding:7px 14px;border-radius:999px;background:rgba(12,11,9,.65);backdrop-filter:blur(8px);border:1px solid rgba(239,233,220,.25);font-size:12px;letter-spacing:.04em}
+.v360-btn{position:absolute;left:50%;top:50%;z-index:2;width:92px;height:92px;margin:-46px 0 0 -46px;border-radius:50%;background:var(--safe);display:grid;place-items:center;box-shadow:0 0 0 10px rgba(255,59,31,.22);transition:transform .35s cubic-bezier(.2,.7,.2,1)}
+.v360-btn svg{width:34px;height:34px;fill:#0c0b09;margin-left:5px}
+.v360-hint{position:absolute;left:0;right:0;bottom:22px;z-index:2;text-align:center;font-size:13px;letter-spacing:.04em;text-shadow:0 2px 10px rgba(0,0,0,.7)}
+@media (hover:hover){.v360-play:hover img{transform:scale(1.04);filter:brightness(.9)}.v360-play:hover .v360-btn{transform:scale(1.1)}}
+.v360-note{margin-top:16px;color:var(--dim);font-size:12.5px}
+.v360-note a{color:var(--ink);text-decoration:underline;text-underline-offset:4px;margin-right:12px}
+@media (max-width:700px){.v360-frame{aspect-ratio:4/3;border-radius:16px}.v360-btn{width:72px;height:72px;margin:-36px 0 0 -36px}.v360-btn svg{width:28px;height:28px}.v360 .amb-head h2{font-size:2rem}}
+
 /* ---------- footer ---------- */
 footer{padding:20vh clamp(16px,3vw,40px) 18vh;text-align:center;border-top:1px solid var(--line)}
 footer h3{font-family:var(--serif);font-weight:400;font-size:clamp(3.4rem,15vw,13rem);line-height:.9;letter-spacing:-.02em}
@@ -369,6 +387,24 @@ footer a{color:var(--ink);text-decoration:underline;text-underline-offset:4px;cu
   </div>
   <div class="grid mode-contact" id="grid"></div>
 </main>
+
+<!-- 360 video -->
+<section class="v360" id="v360" aria-label="360 degree video of the night">
+  <div class="amb-head">
+    <p class="kicker">360°</p>
+    <h2>Look around the room</h2>
+    <p class="v360-sub">Press play, then drag to look in any direction.</p>
+  </div>
+  <div class="v360-frame" id="v360Frame">
+    <button class="v360-play" id="v360Play" aria-label="Play the 360 degree video">
+      <img src="assets/video360-poster.jpg" alt="360 degree panorama of the Upper Deck during the event" width="2000" height="1000" loading="lazy" decoding="async">
+      <span class="v360-badge">360° video</span>
+      <span class="v360-btn" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.55.83l9.5-6.5a1 1 0 0 0 0-1.66l-9.5-6.5A1 1 0 0 0 8 5.5z"/></svg></span>
+      <span class="v360-hint">Drag to look around</span>
+    </button>
+  </div>
+  <p class="v360-note"><a href="https://youtu.be/9yly8NYB5Tc" target="_blank" rel="noopener">Open in YouTube ↗</a> <span>If dragging doesn’t work on your phone, open it in the YouTube app.</span></p>
+</section>
 
 <footer>
   <h3>That's a <em>wrap.</em></h3>
@@ -811,6 +847,16 @@ const AMB = [
 gsap.from(".lens-photo, .lens-copy > *",{y:40,opacity:0,duration:1.1,ease:"expo.out",stagger:.12,scrollTrigger:{trigger:".lens",start:"top 78%"}});
 
 gsap.from("#guide .kicker, #guide li",{y:26,opacity:0,duration:.9,ease:"expo.out",stagger:.1,scrollTrigger:{trigger:"#guide",start:"top 85%"}});
+
+/* 360 video: YouTube is only contacted once someone presses play */
+$("#v360Play").addEventListener("click",()=>{
+  const f=document.createElement("iframe");
+  f.src="https://www.youtube-nocookie.com/embed/9yly8NYB5Tc?autoplay=1&rel=0&playsinline=1";
+  f.title="McGill MMA Alumni Networking Event, Toronto 2026: 360 degree view";
+  f.allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"; f.allowFullscreen=true; f.referrerPolicy="strict-origin-when-cross-origin";
+  $("#v360Play").replaceWith(f);
+});
+gsap.from("#v360 .amb-head > *, #v360Frame",{y:34,opacity:0,duration:1,ease:"expo.out",stagger:.12,scrollTrigger:{trigger:"#v360",start:"top 80%"}});
 
 /* ---------- viewfinder cursor ---------- */
 if(fine){
