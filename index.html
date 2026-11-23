@@ -159,7 +159,7 @@ body::after{content:"";position:fixed;inset:-50%;z-index:90;pointer-events:none;
 .lbbtn{padding:10px 16px;border:1px solid var(--line);border-radius:999px;transition:.25s;background:rgba(12,11,9,.5)}
 .lbbtn:hover{background:var(--ink);color:#0c0b09}
 .lbbtn.p{background:var(--safe);border-color:var(--safe);color:#000}
-.nav{position:absolute;top:50%;z-index:2;width:56px;height:56px;margin-top:-28px;border-radius:50%;border:1px solid var(--line);background:rgba(12,11,9,.5);font-size:18px;transition:.25s}
+.nav{position:absolute;top:50%;z-index:2;width:56px;height:56px;margin-top:-28px;border-radius:50%;border:1px solid var(--line);background:rgba(12,11,9,.5);font-size:18px;transition:background .25s,color .25s}
 .nav:hover{background:var(--ink);color:#0c0b09}
 .nav.prev{left:clamp(8px,2vw,28px)}.nav.next{right:clamp(8px,2vw,28px)}
 @media (max-width:700px){.nav{display:none}}
@@ -471,6 +471,10 @@ for(let i=PHOTOS.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [PH
 if("scrollRestoration" in history) history.scrollRestoration="manual";
 scrollTo(0,0);
 gsap.registerPlugin(ScrollTrigger, Flip);
+ScrollTrigger.clearScrollMemory("manual");                       // ScrollTrigger would otherwise put you back where you were after a refresh
+scrollTo(0,0);
+addEventListener("beforeunload",()=>{ scrollTo(0,0); });        // the browser saves "top" for this page
+addEventListener("pageshow",e=>{ if(e.persisted) scrollTo(0,0); });
 const $ = (s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const fine = matchMedia("(hover:hover) and (pointer:fine)").matches;
@@ -720,7 +724,7 @@ function openLB(i,fromEl){
   const sc=Math.max(from.width/to.width, from.height/to.height);
   gsap.fromTo(lb,{opacity:0},{opacity:1,duration:.4});
   gsap.fromTo(lbImg,{x:from.left+from.width/2-(to.left+to.width/2),y:from.top+from.height/2-(to.top+to.height/2),scale:sc,opacity:.6},{x:0,y:0,scale:1,opacity:1,duration:.85,ease:"expo.out"});
-  gsap.from(".lbbar,.nav,.lbcap",{opacity:0,y:-10,duration:.6,delay:.25,stagger:.05});
+  gsap.fromTo(".lbbar,.nav,.lbcap",{opacity:0,y:-10},{opacity:1,y:0,duration:.6,delay:.25,stagger:.05,clearProps:"opacity,transform",overwrite:true});
   $("#lbX").focus({preventScroll:true});
 }
 function closeLB(){
