@@ -58,7 +58,9 @@ body::after{content:"";position:fixed;inset:-50%;z-index:90;pointer-events:none;
 .heroTitle{text-align:center;padding:0 12px}
 .sub{margin-top:clamp(14px,3vh,34px);display:flex;flex-direction:column;gap:8px;align-items:center;letter-spacing:.04em;font-size:clamp(11px,1.35vw,15px);opacity:0}
 .sub b{font-weight:500;color:var(--ink);font-size:1.25em}
-.sub span{color:var(--dim)}
+.sub span{color:var(--dim);display:flex;flex-wrap:wrap;justify-content:center;gap:4px 0}
+.sub span i{font-style:normal}
+.sub span i+i::before{content:"·";margin:0 .9em}
 .meta{position:absolute;left:0;right:0;bottom:5svh;display:flex;justify-content:space-between;align-items:flex-end;padding:0 clamp(16px,3vw,40px);letter-spacing:.04em;color:var(--dim);font-size:11px;opacity:0}
 .meta b{color:var(--ink);font-weight:500}
 .cue{display:flex;align-items:center;gap:10px;color:var(--ink)}
@@ -72,14 +74,19 @@ body::after{content:"";position:fixed;inset:-50%;z-index:90;pointer-events:none;
 
 
 /* ---------- how-it-works guide ---------- */
-.guide{margin-bottom:clamp(26px,5vh,56px);padding-bottom:clamp(22px,4vh,40px);border-bottom:1px solid var(--line)}
-.guide ol{list-style:none;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(18px,3vw,40px);counter-reset:g}
-.guide li{counter-increment:g;position:relative;padding-top:54px}
-.guide li::before{content:counter(g);position:absolute;top:0;left:0;font-family:var(--serif);font-style:italic;font-size:3rem;line-height:1;color:var(--safe)}
-.guide b{display:block;font-family:var(--serif);font-weight:400;font-size:clamp(1.35rem,2vw,1.7rem);margin-bottom:8px}
-.guide span{display:block;color:var(--dim);font-size:13px;line-height:1.6;max-width:34ch}
-@media (max-width:1000px){.guide ol{grid-template-columns:repeat(2,1fr)}}
-@media (max-width:560px){.guide ol{grid-template-columns:1fr}}
+.guide{margin-bottom:clamp(30px,6vh,64px)}
+.guide ol{list-style:none;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.guide li{position:relative;padding:26px 22px 24px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,rgba(239,233,220,.045),rgba(239,233,220,.012));transition:transform .45s cubic-bezier(.2,.7,.2,1),border-color .35s,background .35s}
+.guide li::before{content:"";position:absolute;left:22px;top:-1px;width:38px;height:3px;border-radius:0 0 4px 4px;background:var(--safe)}
+.guide li:not(:last-child)::after{content:"→";position:absolute;right:-23px;top:50%;margin-top:-14px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--bg);border:1px solid var(--line);color:var(--safe);font-size:13px;z-index:2}
+.guide .ic{display:grid;place-items:center;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,59,31,.45);color:var(--safe);background:rgba(255,59,31,.07);margin-bottom:22px;transition:background .35s,color .35s}
+.guide .ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.guide .gn{position:absolute;right:22px;top:24px;font-style:normal;font-size:12px;letter-spacing:.12em;color:var(--dim)}
+.guide b{display:block;font-family:var(--serif);font-weight:400;font-size:clamp(1.45rem,2.1vw,1.85rem);line-height:1.1;margin-bottom:10px}
+.guide span{display:block;color:var(--dim);font-size:13px;line-height:1.6}
+@media (hover:hover){.guide li:hover{transform:translateY(-4px);border-color:rgba(255,59,31,.5);background:linear-gradient(180deg,rgba(255,59,31,.08),rgba(239,233,220,.012))}.guide li:hover .ic{background:var(--safe);color:#0c0b09}}
+@media (max-width:1000px){.guide ol{grid-template-columns:repeat(2,1fr)}.guide li:not(:last-child)::after{display:none}}
+@media (max-width:560px){.guide ol{grid-template-columns:1fr;gap:12px}}
 
 /* ---------- gallery ---------- */
 #gallery{border-top:1px solid var(--line);padding:clamp(60px,12vh,130px) clamp(12px,3vw,40px) 30vh;position:relative}
@@ -139,7 +146,7 @@ body::after{content:"";position:fixed;inset:-50%;z-index:90;pointer-events:none;
 .chip.go .fill{position:absolute;inset:0;background:rgba(0,0,0,.28);transform:scaleX(0);transform-origin:left}
 .chip.go span{position:relative}
 .sx{display:none;align-items:center;gap:2px}
-.select .sx{display:flex}
+.select .sx,#dock.select .sx{display:flex}
 .cnt{padding:0 8px;color:var(--ink);font-size:11px;letter-spacing:.04em;white-space:nowrap}
 
 /* ---------- lightbox ---------- */
@@ -225,6 +232,43 @@ footer a{color:var(--ink);text-decoration:underline;text-underline-offset:4px;cu
   .lbbar .lbbtn{padding:9px 12px}
 }
 @media (prefers-reduced-motion:reduce){body::after{animation:none}.cue i::after,.top .rec::before{animation:none}}
+
+/* ---------- phone tweaks ---------- */
+@media (max-width:700px){
+  .hero{min-height:520px}
+  .title{font-size:clamp(3.4rem,19vw,6rem)}
+  .sub{margin-top:18px;font-size:11px}
+  .sub b{font-size:1.2em}
+  .sub span{flex-direction:column;align-items:center;gap:3px}
+  .sub span i+i::before{content:none}
+  .top{padding-top:16px}
+  .lens{gap:34px;padding-top:56px;padding-bottom:56px}
+  .lens-photo{max-width:250px;margin-bottom:8px}
+  .lens-photo::before{inset:10px -10px -10px 10px}
+  .lens blockquote{font-size:1.55rem}
+  .lead{padding-top:64px}
+  .lcard{padding:16px;gap:16px}
+  .lcard img{width:92px;height:92px}
+  .amb-head h2{font-size:2rem}
+  .acard{width:min(290px,78vw);padding:16px;gap:14px}
+  .acard .ph{width:72px;height:72px}
+  .acard h3{font-size:1.35rem}
+  .amb-roll{-webkit-mask-image:linear-gradient(90deg,transparent,#000 3%,#000 97%,transparent);mask-image:linear-gradient(90deg,transparent,#000 3%,#000 97%,transparent)}
+  #gallery{padding-left:10px;padding-right:10px}
+  .grid.mode-contact{--h:170px;--gap:6px}
+  .guide li{padding:18px 18px 18px 82px;border-radius:16px}
+  .guide li::before{left:82px}
+  .guide .ic{position:absolute;left:18px;top:18px;margin:0}
+  .guide .gn{top:20px;right:18px}
+  .guide b{font-size:1.35rem;margin-bottom:6px}
+  #dock{flex-wrap:wrap;justify-content:center;width:calc(100vw - 16px);max-width:none;border-radius:24px;padding:8px;gap:6px;overflow:visible;bottom:max(10px,env(safe-area-inset-bottom))}
+  #dock .sep{display:none}
+  #dock .chip{padding:9px 13px}
+  #dock .chip.go{flex:1 1 100%;text-align:center;padding:13px}
+  #dock.select .sx{flex:1 1 100%;justify-content:space-between;padding:0 6px}
+  .lbcap{font-size:1rem;bottom:calc(14px + env(safe-area-inset-bottom));padding:0 16px}
+  footer{padding-top:14vh}
+}
 </style>
 </head>
 <body>
@@ -244,7 +288,7 @@ footer a{color:var(--ink);text-decoration:underline;text-underline-offset:4px;cu
   <div class="top"><span class="brandmarks"><img class="mk mk-mcgill" data-logo="mcgill" alt="McGill University"><img class="mk mk-d" data-logo="desautels" alt="McGill Desautels Faculty of Management"><img class="mk mk-mma" data-logo="mma" alt="Master of Management in Analytics"></span></div>
   <div class="heroTitle">
     <h1 class="title" id="title" aria-label="McGill MMA Alumni"></h1>
-    <p class="sub"><b>Networking Event, Toronto</b><span>Nov 18, 2026 &nbsp;·&nbsp; 6:00 – 10:00 PM &nbsp;·&nbsp; The Pint Public House, 277 Front Street W</span></p>
+    <p class="sub"><b>Networking Event, Toronto</b><span><i>Nov 18, 2026</i><i>6:00 – 10:00 PM</i><i>The Pint Public House, 277 Front Street W</i></span></p>
   </div>
   <div class="meta">
     <span><b id="count">91</b> frames<br>full-resolution originals</span>
@@ -294,10 +338,10 @@ footer a{color:var(--ink);text-decoration:underline;text-underline-offset:4px;cu
   <div class="guide" id="guide" aria-label="How to use this gallery">
     <p class="kicker">How it works</p>
     <ol>
-      <li><b>Look around</b><span>Sheet, Wall and Strip in the bar at the bottom change the layout. Tap any photo to open it big.</span></li>
-      <li><b>Save one</b><span>Open a photo and press “Download original”. You get the full-size file.</span></li>
-      <li><b>Save a few</b><span>Press “Circle”, tap the photos you want, then press the red Download button.</span></li>
-      <li><b>Save them all</b><span>Press “Download all 91”. It’s one big file (about 1 GB), so use wifi.</span></li>
+      <li><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg></i><em class="gn">01</em><b>Look around</b><span>Sheet, Wall and Strip in the bar at the bottom change the layout. Tap any photo to open it big.</span></li>
+      <li><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5"/><path d="M4 17v2.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V17"/></svg></i><em class="gn">02</em><b>Save one</b><span>Open a photo and press the download button. On a phone it says “Save to Photos” and sends the full-size picture to your album.</span></li>
+      <li><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="9.5" ry="7" transform="rotate(-12 12 12)"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg></i><em class="gn">03</em><b>Save a few</b><span>Press “Circle”, tap the photos you want, then press the red Download button.</span></li>
+      <li><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M7 6h10M9.5 3h5"/></svg></i><em class="gn">04</em><b>Save them all</b><span>Press “Download all 91”. On a laptop it’s one big zip (about 1 GB). On a phone it saves to your album 10 at a time.</span></li>
     </ol>
   </div>
   <div class="grid mode-contact" id="grid"></div>
@@ -450,7 +494,7 @@ let selectMode=false; const picked=new Set();
 function updateDock(){
   const n=picked.size;
   $("#cnt").textContent=`${n} circled`;
-  $("#dlTxt").textContent = n ? `Download ${n} ${n===1?"photo":"photos"}` : `Download all ${N}`;
+  $("#dlTxt").textContent = usePhotosShare() ? dockLabel() : (n ? `Download ${n} ${n===1?"photo":"photos"}` : `Download all ${N}`);
 }
 function toggle(i,force){
   const f=frames[i], on = force ?? !picked.has(i);
@@ -462,7 +506,7 @@ function toggle(i,force){
   updateDock();
 }
 $("#selBtn").addEventListener("click",()=>{
-  selectMode=!selectMode; grid.classList.toggle("select",selectMode);
+  selectMode=!selectMode; grid.classList.toggle("select",selectMode); $("#dock").classList.toggle("select",selectMode);
   $("#selBtn").setAttribute("aria-pressed",selectMode);
   if(!selectMode){ [...picked].forEach(i=>toggle(i,false)); }
 });
@@ -501,8 +545,55 @@ async function downloadMany(list,zipName){
   }catch(err){ console.error(err); txt.textContent="Couldn't pack — try fewer"; }
   setTimeout(()=>{ gsap.to(fill,{scaleX:0,duration:.4}); updateDock(); busy=false; },1800);
 }
+/* ---------- phones: send photos to the photo album through the share sheet ----------
+   A website can't write into Photos silently. The share sheet is the closest thing:
+   one extra tap on "Save Image" and the full-size originals land in the album.
+   Laptops keep the normal download / zip. */
+const isTouch=matchMedia("(pointer:coarse)").matches;
+function usePhotosShare(){
+  if(window.__forceShare) return true;
+  if(!isTouch||!navigator.canShare||!navigator.share) return false;
+  try{ return navigator.canShare({files:[new File(["x"],"t.jpg",{type:"image/jpeg"})]}); }catch{ return false; }
+}
+const CH=10;                       // photos per share sheet (keeps phone memory safe)
+let batchStart=0, batchKey="", readyFiles=null;
+const fileCache=new Map();
+async function getFile(p){
+  if(fileCache.has(p.name)) return fileCache.get(p.name);
+  const f=new File([await getBlob(p.orig)],p.name,{type:"image/jpeg"});
+  fileCache.set(p.name,f); if(fileCache.size>CH+2) fileCache.delete(fileCache.keys().next().value);
+  return f;
+}
+const currentList=()=> picked.size ? [...picked].sort((a,b)=>a-b).map(i=>PHOTOS[i]) : PHOTOS;
+function dockLabel(){
+  const n=currentList().length, key=[...picked].sort((a,b)=>a-b).join(",");
+  if(key!==batchKey){ batchKey=key; batchStart=0; readyFiles=null; }
+  if(readyFiles) return "Tap again to save";
+  if(n<=CH) return `Save ${picked.size?n:"all "+n} to Photos`;
+  return `Save ${batchStart+1}–${Math.min(batchStart+CH,n)} of ${n} to Photos`;
+}
+async function saveBatch(){
+  if(busy) return; busy=true; const txt=$("#dlTxt"); const list=currentList(), n=list.length;
+  try{
+    let files=readyFiles;
+    if(!files){
+      const slice=list.slice(batchStart,batchStart+CH); files=[];
+      for(const p of slice){ files.push(await getFile(p)); txt.textContent=`Preparing ${files.length}/${slice.length}…`; }
+    }
+    if(navigator.canShare && !navigator.canShare({files})) throw new Error("cannot share these files");
+    try{
+      await navigator.share({files}); readyFiles=null; batchStart+=CH;
+      if(batchStart>=n){ batchStart=0; txt.textContent="All saved ✓"; busy=false; setTimeout(updateDock,1800); return; }
+    }catch(e){
+      if(e.name==="NotAllowedError") readyFiles=files;       // the phone wants a fresh tap
+      else if(e.name!=="AbortError") throw e;                // AbortError = they closed the sheet
+    }
+  }catch(err){ console.error(err); txt.textContent="Couldn’t open the share sheet"; busy=false; setTimeout(updateDock,2200); return; }
+  busy=false; updateDock();
+}
 $("#dlBtn").addEventListener("click",()=>{
-  const list = picked.size ? [...picked].sort((a,b)=>a-b).map(i=>PHOTOS[i]) : PHOTOS;
+  if(usePhotosShare()){ saveBatch(); return; }
+  const list=currentList();
   downloadMany(list, picked.size?`${EVENT.zip}-selected.zip`:`${EVENT.zip}-all.zip`);
 });
 updateDock();
@@ -517,6 +608,7 @@ function paint(i){
   gsap.set(lbImg,{filter:"blur(14px) brightness(.7) grayscale(.6)"});
   const hi=new Image(); hi.decoding="async"; hi.onload=()=>{ if(cur!==i) return; lbImg.src=p.preview; gsap.to(lbImg,{filter:"blur(0px) brightness(1) grayscale(0)",duration:.9,ease:"power2.out"}); }; hi.src=p.preview;
   $("#lbNo").textContent=`No. ${pad(i+1)} / ${pad(N)}`;
+  $("#lbDl").textContent = usePhotosShare() ? (lbReady.has(p.name)?"Tap again to save":"Save to Photos") : "Download original";
   $("#lbCap").textContent=EVENT.tag;
 }
 function openLB(i,fromEl){
@@ -543,7 +635,23 @@ function step(d){
   }});
 }
 $("#lbX").onclick=closeLB; $("#lbPrev").onclick=()=>step(-1); $("#lbNext").onclick=()=>step(1);
-$("#lbDl").onclick=()=>downloadOne(PHOTOS[cur]);
+const lbReady=new Map();
+async function lbSave(){
+  const btn=$("#lbDl"), p=PHOTOS[cur], label="Save to Photos";
+  if(!usePhotosShare()){ downloadOne(p); return; }
+  try{
+    let f=lbReady.get(p.name);
+    if(!f){ btn.textContent="Preparing…"; f=await getFile(p); }
+    if(navigator.canShare && !navigator.canShare({files:[f]})) throw new Error("cannot share this file");
+    try{ await navigator.share({files:[f]}); lbReady.delete(p.name); btn.textContent=label; }
+    catch(e){
+      if(e.name==="NotAllowedError"){ lbReady.set(p.name,f); btn.textContent="Tap again to save"; }
+      else if(e.name==="AbortError"){ btn.textContent=label; }
+      else throw e;
+    }
+  }catch(err){ console.error(err); btn.textContent=label; downloadOne(p); }
+}
+$("#lbDl").onclick=lbSave;
 lb.addEventListener("click",e=>{ if(e.target.id==="lbStage"||e.target===lb) closeLB(); });
 let sx=null;
 lb.addEventListener("pointerdown",e=>{ sx=e.clientX; });
@@ -597,7 +705,6 @@ if(fine){
 
 /* ---------- dock reveal + misc ---------- */
 const dock=$("#dock"); gsap.set(dock,{yPercent:200,xPercent:-50,left:"50%",x:0});
-ScrollTrigger.create({trigger:"#gallery",start:"top 75%",end:"bottom bottom+=260",onToggle:s=>gsap.to(dock,{yPercent:s.isActive?0:200,duration:.7,ease:"expo.out"})});
 const toTop=()=> lenis ? lenis.scrollTo(0,{duration:2}) : scrollTo({top:0,behavior:"smooth"});
 $("#totop").onclick=toTop;
 $("#cue").onclick=()=> lenis ? lenis.scrollTo("#lens",{duration:1.8}) : $("#lens").scrollIntoView({behavior:"smooth"});
@@ -616,7 +723,7 @@ intro.to(counter,{v:N,duration:1.9,ease:"power2.inOut",onUpdate:()=>{ ln.textCon
  .to(".title .ch",{yPercent:-112,duration:1.2,ease:"expo.out",stagger:.055},"<.2")
  .to(".sub",{opacity:1,y:0,duration:1,ease:"power2.out"},"<.6")
  .to(".top,.meta",{opacity:1,duration:1,stagger:.15},"<.2")
- .add(()=>{ $("#loader").style.display="none"; document.body.classList.remove("lock"); lenis&&lenis.start(); ScrollTrigger.refresh(); });
+ .add(()=>{ $("#loader").style.display="none"; document.body.classList.remove("lock"); lenis&&lenis.start(); ScrollTrigger.refresh(); gsap.to(dock,{yPercent:0,duration:.9,ease:"expo.out"}); });  /* bar slides up once, then stays */
 </script>
 </body>
 </html>
