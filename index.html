@@ -199,7 +199,11 @@ footer a{color:var(--ink);text-decoration:underline;text-underline-offset:4px;cu
 .lens-photo{position:relative;margin:0}
 .lens-photo::before{content:"";position:absolute;inset:14px -14px -14px 14px;border:1px solid var(--safe);border-radius:22px;z-index:0}
 .lens-photo img{position:relative;z-index:1;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;object-position:50% 25%;border-radius:22px;box-shadow:0 30px 80px rgba(0,0,0,.55)}
-.lens blockquote{font-family:var(--serif);font-style:italic;font-size:clamp(1.5rem,3vw,2.6rem);line-height:1.18;letter-spacing:-.01em;margin-bottom:22px}
+.lens blockquote{position:relative;font-family:var(--serif);font-style:normal;font-weight:400;font-size:clamp(1.9rem,3.7vw,3.4rem);line-height:1.1;letter-spacing:-.018em;text-wrap:balance;max-width:20ch;margin-bottom:30px;padding-top:.9em}
+.lens blockquote::before{content:"“";position:absolute;left:-.04em;top:-.12em;font-size:2.4em;line-height:1;color:var(--safe)}
+.lens blockquote::after{content:"";display:block;width:56px;height:2px;margin-top:28px;background:var(--safe);border-radius:2px}
+.lens blockquote em{font-style:normal;color:var(--safe)}
+.lens .kicker{margin-bottom:30px}
 .lens .note{color:var(--dim);max-width:60ch;margin-bottom:26px;font-size:14px;line-height:1.6}
 .btn{display:inline-block;text-decoration:none;padding:13px 22px;border-radius:999px;background:var(--safe);color:#000;font-weight:500;transition:filter .25s,transform .25s}
 .btn:hover{filter:brightness(1.12);transform:translateY(-2px)}
@@ -256,7 +260,7 @@ footer a{color:var(--ink);text-decoration:underline;text-underline-offset:4px;cu
   .lens{gap:34px;padding-top:56px;padding-bottom:56px}
   .lens-photo{max-width:250px;margin-bottom:8px}
   .lens-photo::before{inset:10px -10px -10px 10px}
-  .lens blockquote{font-size:1.55rem}
+  .lens blockquote{font-size:2rem;max-width:none}
   .lead{padding-top:64px}
   .lcard{padding:16px;gap:16px}
   .lcard img{width:92px;height:92px}
@@ -312,7 +316,7 @@ footer a{color:var(--ink);text-decoration:underline;text-underline-offset:4px;cu
   <figure class="lens-photo"><img src="assets/ambassadors/boyang-wan.jpg" alt="Boyang Wan" width="800" height="800" loading="lazy" decoding="async"></figure>
   <div class="lens-copy">
     <p class="kicker">MMA7 &nbsp;·&nbsp; Photographer &nbsp;·&nbsp; Ambassador &nbsp;·&nbsp; Page owner</p>
-    <blockquote id="lensQuote">“Once you’re part of MMA, you stay part of it, and nights like this are why.”</blockquote>
+    <blockquote id="lensQuote">Once you’re part of MMA, you <em>stay part of it</em>, and nights like this are why.</blockquote>
     <p class="note" id="lensNote">I’m Boyang Wan, one of the Toronto MMA ambassadors, the photographer for the night, and the person who built this page. If you have any questions, message me on LinkedIn.</p>
     <a class="btn" href="https://www.linkedin.com/in/boyang-wan-2000" target="_blank" rel="noopener">Message me on LinkedIn ↗</a>
   </div>
