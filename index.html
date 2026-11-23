@@ -233,6 +233,11 @@ footer a{color:var(--ink);text-decoration:underline;text-underline-offset:4px;cu
 }
 @media (prefers-reduced-motion:reduce){body::after{animation:none}.cue i::after,.top .rec::before{animation:none}}
 
+/* ---------- loading state for download buttons ---------- */
+@keyframes spin{to{transform:rotate(360deg)}}
+.chip.go.loading,.lbbtn.loading{pointer-events:none;cursor:progress}
+.chip.go.loading #dlTxt::before,.lbbtn.p.loading::before{content:"";display:inline-block;width:13px;height:13px;margin-right:8px;vertical-align:-2px;border:2px solid rgba(0,0,0,.25);border-top-color:#000;border-radius:50%;animation:spin .75s linear infinite}
+
 /* ---------- phone tweaks ---------- */
 @media (max-width:700px){
   .hero{min-height:520px}
@@ -393,7 +398,7 @@ const EVENT = { line1:"McGill MMA", line2:"Alumni", date:"Nov 18, 2026", tag:"Mc
 const N = MANIFEST.length;
 const pad = n => String(n).padStart(3,"0");
 const PHOTOS = MANIFEST.map(m=>({
-  w:m.w, h:m.h, name:m.name,
+  w:m.w, h:m.h, name:m.name, bytes:m.bytes,
   thumb:`photos/thumb/${m.name}`,        // small, for the grid
   preview:`photos/preview/${m.name}`,    // mid-size, for the viewer + slideshow
   orig:`photos/original/${m.name}`       // untouched original, for downloads
@@ -523,27 +528,52 @@ function saveBlob(blob,name){
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click();
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000);
 }
-async function getBlob(url){ const r=await fetch(url,{mode:"cors"}); if(!r.ok) throw new Error(r.status); return r.blob(); }
-async function downloadOne(p){
-  try{ saveBlob(await getBlob(p.orig),p.name); }
+/* A download takes a while, so the button reacts at once, shows a spinner and reports real progress. */
+async function getBlob(url,onBytes){
+  const r=await fetch(url,{mode:"cors"}); if(!r.ok) throw new Error(r.status);
+  if(!onBytes||!r.body||!r.body.getReader) return r.blob();
+  const reader=r.body.getReader(), chunks=[];
+  for(;;){ const {done,value}=await reader.read(); if(done) break; chunks.push(value); onBytes(value.length); }
+  return new Blob(chunks,{type:r.headers.get("content-type")||"image/jpeg"});
+}
+const pct=(g,t)=>t?Math.min(99,Math.round(g/t*100)):0;
+const lbUI={                                   // the viewer's "Download original" button
+  btn:()=>$("#lbDl"),
+  reset(){ const b=this.btn(); b.classList.remove("loading"); b.textContent=usePhotosShare()?"Save to Photos":"Download original"; },
+  start(){ const b=this.btn(); b.classList.add("loading"); b.textContent="Starting…"; },
+  progress(g,t){ this.btn().textContent=t?`Downloading ${pct(g,t)}%`:"Downloading…"; },
+  done(){ const b=this.btn(); b.classList.remove("loading"); b.textContent="Saved ✓"; setTimeout(()=>this.reset(),1800); }
+};
+async function downloadOne(p,ui){
+  ui&&ui.start(); let got=0;
+  try{ const b=await getBlob(p.orig,n=>{got+=n; ui&&ui.progress(got,p.bytes);}); saveBlob(b,p.name); }
   catch{ const a=document.createElement("a"); a.href=p.orig; a.download=p.name; a.target="_blank"; a.rel="noopener"; a.click(); }
+  ui&&ui.done();
 }
 let busy=false;
-async function downloadMany(list,zipName){
+async function downloadMany(list,zipName){     // the bottom bar's red button
   if(busy||!list.length) return; busy=true;
-  if(list.length===1){ await downloadOne(list[0]); busy=false; return; }
-  const txt=$("#dlTxt"), fill=$("#dlFill"), old=txt.textContent;
+  const btn=$("#dlBtn"), txt=$("#dlTxt"), fill=$("#dlFill");
+  btn.classList.add("loading"); btn.setAttribute("aria-busy","true");
+  txt.textContent="Starting…"; gsap.to(fill,{scaleX:.04,duration:.3});      // instant reaction, before any network work
+  const total=list.reduce((s,p)=>s+(p.bytes||0),0); let got=0, done=0;
+  const report=()=>{ const pc=pct(got,total); txt.textContent=list.length>1?`Downloading ${pc}% · ${done}/${list.length}`:`Downloading ${pc}%`; gsap.to(fill,{scaleX:Math.min(.9,got/(total||1)*.9),duration:.25,overwrite:true}); };
   try{
-    const zip=new JSZip(); let done=0;
-    const queue=[...list]; const workers=Array.from({length:4},async()=>{
-      while(queue.length){ const p=queue.shift(); const b=await getBlob(p.orig); zip.file(p.name,b); done++; txt.textContent=`Packing ${done}/${list.length}`; gsap.to(fill,{scaleX:done/list.length*.9,duration:.3}); }
-    });
-    await Promise.all(workers);
-    txt.textContent="Zipping…";
-    const out=await zip.generateAsync({type:"blob",compression:"STORE"},m=>gsap.to(fill,{scaleX:.9+m.percent/1000,duration:.2}));
-    saveBlob(out,zipName); txt.textContent="Done ✓"; gsap.to(fill,{scaleX:1,duration:.2});
-  }catch(err){ console.error(err); txt.textContent="Couldn't pack — try fewer"; }
-  setTimeout(()=>{ gsap.to(fill,{scaleX:0,duration:.4}); updateDock(); busy=false; },1800);
+    if(list.length===1){
+      const q=list[0]; saveBlob(await getBlob(q.orig,n=>{got+=n;report();}),q.name);
+    }else{
+      const zip=new JSZip(), queue=[...list];
+      await Promise.all(Array.from({length:4},async()=>{
+        while(queue.length){ const q=queue.shift(); const b=await getBlob(q.orig,n=>{got+=n;report();}); zip.file(q.name,b); done++; report(); }
+      }));
+      txt.textContent="Building your zip…"; gsap.to(fill,{scaleX:.93,duration:.3,overwrite:true});
+      await new Promise(res=>setTimeout(res,40));                           // let that label paint before the heavy step
+      const out=await zip.generateAsync({type:"blob",compression:"STORE"},m=>{ txt.textContent=`Building your zip… ${Math.round(m.percent)}%`; });
+      saveBlob(out,zipName);
+    }
+    txt.textContent="Done ✓"; gsap.to(fill,{scaleX:1,duration:.2,overwrite:true});
+  }catch(err){ console.error(err); txt.textContent="Couldn’t download. Try fewer"; }
+  setTimeout(()=>{ gsap.to(fill,{scaleX:0,duration:.4}); btn.classList.remove("loading"); btn.removeAttribute("aria-busy"); updateDock(); busy=false; },1800);
 }
 /* ---------- phones: send photos to the photo album through the share sheet ----------
    A website can't write into Photos silently. The share sheet is the closest thing:
@@ -558,9 +588,9 @@ function usePhotosShare(){
 const CH=10;                       // photos per share sheet (keeps phone memory safe)
 let batchStart=0, batchKey="", readyFiles=null;
 const fileCache=new Map();
-async function getFile(p){
+async function getFile(p,onBytes){
   if(fileCache.has(p.name)) return fileCache.get(p.name);
-  const f=new File([await getBlob(p.orig)],p.name,{type:"image/jpeg"});
+  const f=new File([await getBlob(p.orig,onBytes)],p.name,{type:"image/jpeg"});
   fileCache.set(p.name,f); if(fileCache.size>CH+2) fileCache.delete(fileCache.keys().next().value);
   return f;
 }
@@ -573,6 +603,10 @@ function dockLabel(){
   return `Save ${batchStart+1}–${Math.min(batchStart+CH,n)} of ${n} to Photos`;
 }
 async function saveBatch(){
+  const b=$("#dlBtn"); b.classList.add("loading");
+  try{ await saveBatchInner(); } finally{ b.classList.remove("loading"); }
+}
+async function saveBatchInner(){
   if(busy) return; busy=true; const txt=$("#dlTxt"); const list=currentList(), n=list.length;
   try{
     let files=readyFiles;
@@ -638,10 +672,10 @@ $("#lbX").onclick=closeLB; $("#lbPrev").onclick=()=>step(-1); $("#lbNext").oncli
 const lbReady=new Map();
 async function lbSave(){
   const btn=$("#lbDl"), p=PHOTOS[cur], label="Save to Photos";
-  if(!usePhotosShare()){ downloadOne(p); return; }
+  if(!usePhotosShare()){ downloadOne(p,lbUI); return; }
   try{
     let f=lbReady.get(p.name);
-    if(!f){ btn.textContent="Preparing…"; f=await getFile(p); }
+    if(!f){ btn.classList.add("loading"); btn.textContent="Preparing…"; let got=0; f=await getFile(p,n=>{got+=n; btn.textContent=`Preparing ${pct(got,p.bytes)}%`;}); btn.classList.remove("loading"); }
     if(navigator.canShare && !navigator.canShare({files:[f]})) throw new Error("cannot share this file");
     try{ await navigator.share({files:[f]}); lbReady.delete(p.name); btn.textContent=label; }
     catch(e){
@@ -649,7 +683,7 @@ async function lbSave(){
       else if(e.name==="AbortError"){ btn.textContent=label; }
       else throw e;
     }
-  }catch(err){ console.error(err); btn.textContent=label; downloadOne(p); }
+  }catch(err){ console.error(err); btn.classList.remove("loading"); btn.textContent=label; downloadOne(p,lbUI); }
 }
 $("#lbDl").onclick=lbSave;
 lb.addEventListener("click",e=>{ if(e.target.id==="lbStage"||e.target===lb) closeLB(); });
@@ -661,7 +695,7 @@ addEventListener("resize",()=>{ if(lbOpen){ const d=fit(PHOTOS[cur]); lbImg.styl
 /* keyboard */
 addEventListener("keydown",e=>{
   if(!lbOpen) return;
-  if(e.key==="Escape") closeLB(); else if(e.key==="ArrowRight") step(1); else if(e.key==="ArrowLeft") step(-1); else if(e.key.toLowerCase()==="d") downloadOne(PHOTOS[cur]);
+  if(e.key==="Escape") closeLB(); else if(e.key==="ArrowRight") step(1); else if(e.key==="ArrowLeft") step(-1); else if(e.key.toLowerCase()==="d") downloadOne(PHOTOS[cur],lbUI);
 });
 
 /* ---------- ambassadors: rolling shout-out ---------- */
