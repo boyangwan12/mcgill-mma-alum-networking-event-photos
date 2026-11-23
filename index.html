@@ -238,6 +238,12 @@ footer a{color:var(--ink);text-decoration:underline;text-underline-offset:4px;cu
 .chip.go.loading,.lbbtn.loading{pointer-events:none;cursor:progress}
 .chip.go.loading #dlTxt::before,.lbbtn.p.loading::before{content:"";display:inline-block;width:13px;height:13px;margin-right:8px;vertical-align:-2px;border:2px solid rgba(0,0,0,.25);border-top-color:#000;border-radius:50%;animation:spin .75s linear infinite}
 
+.chip.stop{display:none;border:1px solid rgba(255,59,31,.55);background:rgba(255,59,31,.12);color:#ff7a62}
+#dock.loading .chip.stop{display:inline-flex;align-items:center;gap:8px}
+.chip.stop::before{content:"";width:9px;height:9px;border-radius:2px;background:currentColor}
+.chip.stop:hover{background:rgba(255,59,31,.28);color:#fff}
+@media (max-width:700px){#dock.loading .chip.go{flex:1 1 0}#dock.loading .chip.stop{flex:0 0 auto}}
+
 /* ---------- phone tweaks ---------- */
 @media (max-width:700px){
   .hero{min-height:520px}
@@ -346,7 +352,7 @@ footer a{color:var(--ink);text-decoration:underline;text-underline-offset:4px;cu
       <li><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg></i><em class="gn">01</em><b>Look around</b><span>Sheet, Wall and Strip in the bar at the bottom change the layout. Tap any photo to open it big.</span></li>
       <li><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5"/><path d="M4 17v2.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V17"/></svg></i><em class="gn">02</em><b>Save one</b><span>Open a photo and press the download button. On a phone it says “Save to Photos” and sends the full-size picture to your album.</span></li>
       <li><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="9.5" ry="7" transform="rotate(-12 12 12)"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg></i><em class="gn">03</em><b>Save a few</b><span>Press “Circle”, tap the photos you want, then press the red Download button.</span></li>
-      <li><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M7 6h10M9.5 3h5"/></svg></i><em class="gn">04</em><b>Save them all</b><span>Press “Download all 91”. On a laptop it’s one big zip (about 1 GB). On a phone it saves to your album 10 at a time.</span></li>
+      <li><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M7 6h10M9.5 3h5"/></svg></i><em class="gn">04</em><b>Save them all</b><span>Press “Download all 91”. These are all original, full-size photos (about 1 GB in total), so it might take several minutes. Keep this page open. On a phone it saves to your album 10 at a time.</span></li>
     </ol>
   </div>
   <div class="grid mode-contact" id="grid"></div>
@@ -367,6 +373,7 @@ footer a{color:var(--ink);text-decoration:underline;text-underline-offset:4px;cu
   <i class="sep"></i>
   <button class="chip sel-on" id="selBtn" aria-pressed="false">Circle</button>
   <span class="sx"><span class="cnt" id="cnt">0 circled</span><button class="chip" id="allBtn">All</button><button class="chip" id="noneBtn">Clear</button></span>
+  <button class="chip stop" id="stopBtn" aria-label="Stop the download">Stop</button>
   <button class="chip go" id="dlBtn"><i class="fill" id="dlFill"></i><span id="dlTxt">Download all</span></button>
 </nav>
 
@@ -529,8 +536,8 @@ function saveBlob(blob,name){
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000);
 }
 /* A download takes a while, so the button reacts at once, shows a spinner and reports real progress. */
-async function getBlob(url,onBytes){
-  const r=await fetch(url,{mode:"cors"}); if(!r.ok) throw new Error(r.status);
+async function getBlob(url,onBytes,signal){
+  const r=await fetch(url,{mode:"cors",signal}); if(!r.ok) throw new Error(r.status);
   if(!onBytes||!r.body||!r.body.getReader) return r.blob();
   const reader=r.body.getReader(), chunks=[];
   for(;;){ const {done,value}=await reader.read(); if(done) break; chunks.push(value); onBytes(value.length); }
@@ -550,29 +557,36 @@ async function downloadOne(p,ui){
   catch{ const a=document.createElement("a"); a.href=p.orig; a.download=p.name; a.target="_blank"; a.rel="noopener"; a.click(); }
   ui&&ui.done();
 }
-let busy=false;
+let busy=false, dlRun=null;
+$("#stopBtn").addEventListener("click",()=>{ if(dlRun){ dlRun.cancelled=true; dlRun.ctl.abort(); } });   // Stop: cancel every transfer, save nothing
 async function downloadMany(list,zipName){     // the bottom bar's red button
   if(busy||!list.length) return; busy=true;
+  const run=dlRun={ctl:new AbortController(),cancelled:false}, sig=run.ctl.signal;
   const btn=$("#dlBtn"), txt=$("#dlTxt"), fill=$("#dlFill");
-  btn.classList.add("loading"); btn.setAttribute("aria-busy","true");
+  $("#dock").classList.add("loading"); btn.classList.add("loading"); btn.setAttribute("aria-busy","true");
   txt.textContent="Starting…"; gsap.to(fill,{scaleX:.04,duration:.3});      // instant reaction, before any network work
   const total=list.reduce((s,p)=>s+(p.bytes||0),0); let got=0, done=0;
   const report=()=>{ const pc=pct(got,total); txt.textContent=list.length>1?`Downloading ${pc}% · ${done}/${list.length}`:`Downloading ${pc}%`; gsap.to(fill,{scaleX:Math.min(.9,got/(total||1)*.9),duration:.25,overwrite:true}); };
   try{
     if(list.length===1){
-      const q=list[0]; saveBlob(await getBlob(q.orig,n=>{got+=n;report();}),q.name);
+      const q=list[0]; const b1=await getBlob(q.orig,n=>{got+=n;report();},sig); if(!run.cancelled) saveBlob(b1,q.name);
     }else{
       const zip=new JSZip(), queue=[...list];
       await Promise.all(Array.from({length:4},async()=>{
-        while(queue.length){ const q=queue.shift(); const b=await getBlob(q.orig,n=>{got+=n;report();}); zip.file(q.name,b); done++; report(); }
+        while(queue.length){ const q=queue.shift(); const b=await getBlob(q.orig,n=>{got+=n;report();},sig); zip.file(q.name,b); done++; report(); }
       }));
       txt.textContent="Building your zip…"; gsap.to(fill,{scaleX:.93,duration:.3,overwrite:true});
       await new Promise(res=>setTimeout(res,40));                           // let that label paint before the heavy step
       const out=await zip.generateAsync({type:"blob",compression:"STORE"},m=>{ txt.textContent=`Building your zip… ${Math.round(m.percent)}%`; });
-      saveBlob(out,zipName);
+      if(!run.cancelled) saveBlob(out,zipName);
     }
-    txt.textContent="Done ✓"; gsap.to(fill,{scaleX:1,duration:.2,overwrite:true});
-  }catch(err){ console.error(err); txt.textContent="Couldn’t download. Try fewer"; }
+    if(run.cancelled){ txt.textContent="Stopped"; gsap.to(fill,{scaleX:0,duration:.3,overwrite:true}); }
+    else{ txt.textContent="Done ✓"; gsap.to(fill,{scaleX:1,duration:.2,overwrite:true}); }
+  }catch(err){
+    if(run.cancelled){ txt.textContent="Stopped"; gsap.to(fill,{scaleX:0,duration:.3,overwrite:true}); }
+    else{ console.error(err); txt.textContent="Couldn’t download. Try fewer"; }
+  }
+  $("#dock").classList.remove("loading"); dlRun=null;                    // Stop button goes away right away
   setTimeout(()=>{ gsap.to(fill,{scaleX:0,duration:.4}); btn.classList.remove("loading"); btn.removeAttribute("aria-busy"); updateDock(); busy=false; },1800);
 }
 /* ---------- phones: send photos to the photo album through the share sheet ----------
